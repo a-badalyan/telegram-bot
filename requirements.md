@@ -5,13 +5,11 @@ asgiref==3.3.1
 astroid==2.5.1
 async-timeout==3.0.1
 attrs==20.3.0
-Babel==2.9.1
 cached-property==1.5.2
 certifi==2020.12.5
 chardet==4.0.0
 colorama==0.4.4
 defusedxml==0.7.1
-Django==3.1.7
 et-xmlfile==1.1.0
 idna==2.10
 isodate==0.6.0
@@ -22,11 +20,8 @@ mccabe==0.6.1
 multidict==5.2.0
 numpy==1.20.2
 openpyxl==3.0.7
-pandas==1.2.4
 progress==1.5
 progress-bar==8
-psycopg2==2.8.6
-pylint==2.7.2
 python-dateutil==2.8.1
 pytz==2021.1
 requests==2.25.1
