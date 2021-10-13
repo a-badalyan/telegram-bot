@@ -106,11 +106,8 @@ async def notifications_every_min():
                 dat = cursor.fetchall()
                 fresh_notification = formatter(dat)
                 await bot.send_message(USER_ID,fresh_notification, disable_notification=True)
-        else:
-            fresh_notification = 'Свежих публикаций нет'
-            await bot.send_message(USER_ID, fresh_notification, disable_notification=True)
 
-        await asyncio.sleep(60)
+        await asyncio.sleep(86400)
 
 
 if __name__ == '__main__':
