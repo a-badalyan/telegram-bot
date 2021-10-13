@@ -12,7 +12,8 @@ http = urllib3.PoolManager()
 
 
 def parser(commit=True):
-    r = http.request('GET', f'https://torgi.gov.ru/opendata/7710349494-torgi/data-2-{START}01T0000-{END}12T0000-structure-20130401T0000.xml')
+    new_bids = []
+    r = http.request('GET', f'https://torgi.gov.ru/opendata/7710349494-torgi/data-2-{START}01T0000-{END}T0000-structure-20130401T0000.xml')
     root = ET.fromstring(r.data)
     for notification in root.findall(f'.//{NS}notification'):
         if 'МАРИЙ' in notification.find(f'{NS}organizationName').text: 
@@ -22,61 +23,64 @@ def parser(commit=True):
             organization_name = iRoot.find(f'.//{NS}bidOrganization/{NS}fullName').text
             link = iRoot.find(f'.//{NS}notificationUrl').text
             published = iRoot.find(f'.//{NS}published').text
-            for lot in iRoot.findall(f'.//{NS}lot'):
+            for lot in iRoot.findall(f'.//{NS}lot'):            
                 bid_id = lot.find(f'.//{NS}id').text
-                bid_status = lot.find(f'.//{NS}bidStatus/{NS}name').text
-                if lot.find(f'.//{NS}groundUsageList/{NS}name') != None: 
-                    usage_list = lot.find(f'{NS}groundUsageList/{NS}name').text
+                if int(bid_id) in get_old_bid_ids():
+                    continue
                 else:
-                    usage_list = 'Нет данных'
-                location_name = lot.find(f'{NS}fiasLocation/{NS}name').text
-                if lot.find(f'.//{NS}cadastralNum') != None:
-                    cadastral_num = lot.find(f'.//{NS}cadastralNum').text
-                else:
-                    cadastral_num = 'Нет данных'
-                area = lot.find(f'.//{NS}area').text
-                startPrice = lot.find(f'.//{NS}startPrice').text
-                
-                cursor.execute('SELECT * FROM data', 
-                (bid_id, organization_name, bid_status, published, usage_list, location_name, cadastral_num, area, startPrice, link))
+                    bid_status = lot.find(f'.//{NS}bidStatus/{NS}name').text
+                    if lot.find(f'.//{NS}groundUsageList/{NS}name') != None: 
+                        usage_list = lot.find(f'{NS}groundUsageList/{NS}name').text
+                    else:
+                        usage_list = 'Нет данных'
+                    location_name = lot.find(f'{NS}fiasLocation/{NS}name').text
+                    if lot.find(f'.//{NS}cadastralNum') != None:
+                        cadastral_num = lot.find(f'.//{NS}cadastralNum').text
+                    else:
+                        cadastral_num = 'Нет данных'
+                    area = lot.find(f'.//{NS}area').text
+                    startPrice = lot.find(f'.//{NS}startPrice').text
 
-                # cursor.execute('INSERT INTO data (bid_id, organization_name, bid_status, published, usage_list, location_name, cadastral_num, area, startPrice, link) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', 
-                # (bid_id, organization_name, bid_status, published, usage_list, location_name, cadastral_num, area, startPrice, link))
-                # if commit == True: 
-                #     connection.commit()
-    connection.close()
+                    cursor.execute('INSERT INTO data (bid_id, organization_name, bid_status, published, usage_list, location_name, cadastral_num, area, startPrice, link) VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)', 
+                    (bid_id, organization_name, bid_status, published, usage_list, location_name, cadastral_num, area, startPrice, link))
+                    
+                    new_bids.append(bid_id)
+                    if commit == True: 
+                        connection.commit()
+                    
+    return new_bids
 
 
 
 
 @dp.message_handler(commands='start')
 async def start(message: types.Message):
-    start_buttons = ['Последние 20 уведомлений', 'Свежие публикации']
+    start_buttons = ['Получить 20 публикаций и подписаться']
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(*start_buttons)
     await message.answer('Меню', reply_markup=keyboard)
 
-@dp.message_handler(Text(equals='Последние 20 уведомлений'))
+@dp.message_handler(Text(equals='Получить 20 публикаций и подписаться'))
 async def get_all_notifications(message: types.Message):
-    cursor.execute('SELECT * FROM data ORDER BY published DESC LIMIT 10')
+    cursor.execute('SELECT * FROM data ORDER BY published DESC LIMIT 20')
     data = cursor.fetchall()
     for v in data:
         notification =  f"{v[1]}\n" \
-                    f"\n" \
-                    f"Дата публикации: {v[3]}\n" \
-                    f"\n" \
-                    f"Статус: {v[2]}\n" \
-                    f"\n" \
-                    f"Назначение: {v[4]}\n" \
-                    f"\n" \
-                    f"Расположение: {v[5]}\n" \
-                    f"\n" \
-                    f"Кадастровый номер: {v[6]}\n" \
-                    f"\n" \
-                    f"Площадь, кв. м: {v[7]}\n" \
-                    f"\n" \
-                    f"Стартовая цена: {v[8]}\n" \
-                    f"Ссылка: {v[9]}\n"
+                        f"\n" \
+                        f"Дата публикации: {v[3]}\n" \
+                        f"\n" \
+                        f"Статус: {v[2]}\n" \
+                        f"\n" \
+                        f"Назначение: {v[4]}\n" \
+                        f"\n" \
+                        f"Расположение: {v[5]}\n" \
+                        f"\n" \
+                        f"Кадастровый номер: {v[6]}\n" \
+                        f"\n" \
+                        f"Площадь, кв. м: {v[7]}\n" \
+                        f"\n" \
+                        f"Стартовая цена: {v[8]}\n" \
+                        f"Ссылка: {v[9]}\n"
 
         await message.answer(notification)
 
@@ -93,20 +97,23 @@ async def get_all_notifications(message: types.Message):
 #     await message.answer(fresh_notification)
 
 
-# async def notifications_every_min():
-#     while True:
-#         parser()
-#         if len(fresh_data) >= 1:
-#            await bot.send_message(USER_ID,fresh_notification, disable_notification=True)
-#         else:
-#             fresh_notification = 'Свежих публикаций нет'
-#             await bot.send_message(USER_ID, fresh_notification, disable_notification=True)
+async def notifications_every_min():
+    while True:
+        n = parser()
+        if len(n) >= 1:
+            for i in n:
+                cursor.execute(f'SELECT * FROM data WHERE bid_id = {i}')
+                dat = cursor.fetchall()
+                fresh_notification = formatter(dat)
+                await bot.send_message(USER_ID,fresh_notification, disable_notification=True)
+        else:
+            fresh_notification = 'Свежих публикаций нет'
+            await bot.send_message(USER_ID, fresh_notification, disable_notification=True)
 
-#         await asyncio.sleep(10)
+        await asyncio.sleep(60)
 
 
 if __name__ == '__main__':
-    # loop = asyncio.get_event_loop()
-    # loop.create_task(notifications_every_min())
+    loop = asyncio.get_event_loop()
+    loop.create_task(notifications_every_min())
     executor.start_polling(dp)
-    # parser()
