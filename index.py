@@ -55,7 +55,7 @@ def parser(commit=True):
 
 @dp.message_handler(commands='start')
 async def start(message: types.Message):
-    start_buttons = ['Получить 20 публикаций и подписаться']
+    start_buttons = ['Получить последние 20 публикаций']
     keyboard = types.ReplyKeyboardMarkup(resize_keyboard=True)
     keyboard.add(*start_buttons)
     await message.answer('Меню', reply_markup=keyboard)
@@ -105,9 +105,14 @@ async def notifications_every_min():
                 cursor.execute(f'SELECT * FROM data WHERE bid_id = {i}')
                 dat = cursor.fetchall()
                 fresh_notification = formatter(dat)
-                await bot.send_message(USER_ID,fresh_notification, disable_notification=True)
+                for id in USER_ID:
+                    await bot.send_message(id,fresh_notification, disable_notification=True)
+        else:
+            fresh_notification = 'Свежих публикаций не было'
+            for id in USER_ID:
+                await bot.send_message(id,fresh_notification, disable_notification=True)
 
-        await asyncio.sleep(86400)
+        await asyncio.sleep(10)
 
 
 if __name__ == '__main__':

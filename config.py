@@ -5,9 +5,9 @@ NS = '{http://torgi.gov.ru/opendata}'
 START = '202110'
 END = datetime.today().strftime('%Y%m%d')
 BOT_API = '1960299413:AAE5z8W-S6mT1JU_lxoxjmsKCYUQ_qOnSuo'
-USER_ID = '442690958'
+USER_ID = ['442690958', '439686178']
 
-connection = psycopg2.connect(database='d1t4q73ghf3os8', user='urvpmchymphckt', password='295f3cae1610ba411fda7740fee03b0d13576c350b72c541b18fd96cdc2f3d14', host='ec2-176-34-105-15.eu-west-1.compute.amazonaws.com', port='5432')
+connection = psycopg2.connect(database='tgbot', user='postgres', password='39810', host='127.0.0.1', port='5432')
 cursor = connection.cursor()
 
 
