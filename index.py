@@ -96,7 +96,7 @@ async def notifications_every_min():
                 # for id in USER_ID:
                 await bot.send_message(USER_ID, fresh_notification, disable_notification=True)
 
-        await asyncio.sleep(100)
+        await asyncio.sleep(10000)
 
 
 if __name__ == '__main__':
