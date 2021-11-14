@@ -60,7 +60,7 @@ async def start(message: types.Message):
     keyboard.add(*start_buttons)
     await message.answer('Меню', reply_markup=keyboard)
 
-@dp.message_handler(Text(equals='Получить 20 публикаций и подписаться'))
+@dp.message_handler(Text(equals='Получить последние 20 публикаций'))
 async def get_all_notifications(message: types.Message):
     cursor.execute('SELECT * FROM data ORDER BY published DESC LIMIT 20')
     data = cursor.fetchall()
@@ -85,18 +85,6 @@ async def get_all_notifications(message: types.Message):
         await message.answer(notification)
 
 
-# @dp.message_handler(Text(equals='Свежие публикации'))
-# async def get_all_notifications(message: types.Message):
-        
-#     if len(fresh_data) >= 1:
-
-#     else:
-#         fresh_notification = 'Свежих публикаций нет'
-
-
-#     await message.answer(fresh_notification)
-
-
 async def notifications_every_min():
     while True:
         n = parser()
@@ -105,14 +93,10 @@ async def notifications_every_min():
                 cursor.execute(f'SELECT * FROM data WHERE bid_id = {i}')
                 dat = cursor.fetchall()
                 fresh_notification = formatter(dat)
-                for id in USER_ID:
-                    await bot.send_message(id,fresh_notification, disable_notification=True)
-        else:
-            fresh_notification = 'Свежих публикаций не было'
-            for id in USER_ID:
-                await bot.send_message(id,fresh_notification, disable_notification=True)
+                # for id in USER_ID:
+                await bot.send_message(USER_ID, fresh_notification, disable_notification=True)
 
-        await asyncio.sleep(10)
+        await asyncio.sleep(100)
 
 
 if __name__ == '__main__':
